@@ -1,4 +1,4 @@
-# ExtractVariable
+# ExtractVariables
 
 VBA Source Code 에서 사용된 변수리스트 추출
 
