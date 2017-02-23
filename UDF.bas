@@ -1,8 +1,4 @@
-Attribute VB_Name = "M02_UDF"
 Option Explicit
-
-
-
 ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 ' SplitMultiDelims by alainbryden
 ' This function splits Text into an array of substrings, each substring
@@ -79,7 +75,7 @@ End Function
 
 
 
-' ¹è¿­ ³»ÀÇ Áßº¹µÈ ³»¿ëÀ» Á¦°Å (Remove duplicate items)
+' ë°°ì—´ ë‚´ì˜ ì¤‘ë³µëœ ë‚´ìš©ì„ ì œê±° (Remove duplicate items)
 Function ArrayUnique(ByVal aArrayIn As Variant) As Variant
     ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
     ' ArrayUnique
@@ -111,7 +107,7 @@ End Function
 
 
 
-' ¹è¿­ ³»ÀÇ ºó ¿ä¼Ò¸¦ Á¦°Å (Remove empty items)
+' ë°°ì—´ ë‚´ì˜ ë¹ˆ ìš”ì†Œë¥¼ ì œê±° (Remove empty items)
 Function Clean_Array(Arr As Variant) As Variant
     
     Dim i As Integer, j As Integer
