@@ -77,8 +77,20 @@ Public Sub ExtractVars()
         
         Line Input #fnr, RecData
         
-        '명령어 뒷부분(오른쪽)에 위치한 주석 내용을 삭제 처리
-        If InStr(RecData, "'") > 0 Then RecData = Left(RecData, InStr(RecData, "'") - 1)
+        '명령어 뒷부분(오른쪽)에 위치한 주석 내용을 삭제 처리 - 단, 큰 따옴표 사이에 들어가는 작은 따옴표의 경우, 주석이 아니기 때문에 예외 처리
+        If InStr(RecData, "'") > 0 Then
+            If InStr(RecData, """") > 0 And InStr(RecData, "'") > InStr(RecData, """") Then
+                TRecData = RecData
+                Do While InStr(TRecData, """") > 0
+                    TRecData = Right(TRecData, Len(TRecData) - InStr(InStr(TRecData, """") + 1, TRecData, """"))
+                Loop
+                If InStr(TRecData, "'") > 0 Then
+                    RecData = Replace(RecData, Right(TRecData, Len(TRecData) - InStr(TRecData, "'") + 1), "")
+                End If
+            Else
+                RecData = Left(RecData, InStr(RecData, "'") - 1)
+            End If
+        End If
         
         '문장 내에서 큰 따옴표에 해당하는 부분을 모두 삭제 처리
         Do While InStr(RecData, """") > 0
