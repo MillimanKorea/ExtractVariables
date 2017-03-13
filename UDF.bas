@@ -1,4 +1,8 @@
+Attribute VB_Name = "M02_UDF"
 Option Explicit
+
+
+
 ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 ' SplitMultiDelims by alainbryden
 ' This function splits Text into an array of substrings, each substring
@@ -14,7 +18,7 @@ Option Explicit
 Function SplitMultiDelims(ByRef TEXT As String, ByRef DelimChars As String, _
     Optional ByVal IgnoreConsecutiveDelimiters As Boolean = False, _
     Optional ByVal Limit As Long = -1) As String()
-    Dim ElemStart As Long, N As Long, M As Long, Elements As Long
+    Dim ElemStart As Long, N As Long, m As Long, Elements As Long
     Dim lDelims As Long, lText As Long
     Dim Arr() As String
     Dim index_start As Boolean, index_start2 As Boolean
@@ -75,7 +79,7 @@ End Function
 
 
 
-' ë°°ì—´ ë‚´ì˜ ì¤‘ë³µëœ ë‚´ìš©ì„ ì œê±° (Remove duplicate items)
+' ¹è¿­ ³»ÀÇ Áßº¹µÈ ³»¿ëÀ» Á¦°Å (Remove duplicate items)
 Function ArrayUnique(ByVal aArrayIn As Variant) As Variant
     ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
     ' ArrayUnique
@@ -107,7 +111,7 @@ End Function
 
 
 
-' ë°°ì—´ ë‚´ì˜ ë¹ˆ ìš”ì†Œë¥¼ ì œê±° (Remove empty items)
+' ¹è¿­ ³»ÀÇ ºó ¿ä¼Ò¸¦ Á¦°Å (Remove empty items)
 Function Clean_Array(Arr As Variant) As Variant
     
     Dim i As Integer, j As Integer
@@ -134,3 +138,16 @@ Public Function MyMin(ByVal a As Double, ByVal b As Double) As Double
     MyMin = a
     If a > b Then MyMin = b
 End Function
+
+
+
+Sub DataValidate(ByVal Filter As String)
+    
+    With Selection.Validation
+        .Delete
+        .Add Type:=xlValidateList, AlertStyle:=xlValidAlertStop, Operator:=xlBetween, Formula1:=Filter
+    End With
+End Sub
+
+
+

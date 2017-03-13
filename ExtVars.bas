@@ -1,3 +1,4 @@
+Attribute VB_Name = "ExtVars"
 Option Explicit
 
 
@@ -10,16 +11,20 @@ Public Sub ExtractVars()
     Dim TRecData As String
     Dim SRecData() As String
     Dim RecDataSaved As String
+    ReDim RecDataTot(0) As String
+    
+    Dim LCount As Long
     
     Dim i As Long
     Dim j As Long
-    Dim k As Long, l As Long
+    Dim k As Long, l As Long, m As Long
     Dim h As Long
     
     Dim idx As Long
     ReDim VarArray(1) As String
     Dim UArray As Variant
     Dim ArrCount As Long
+    Dim ArrString(0) As String
     Dim Flag As Long
     
     Dim strFileToOpen As Variant
@@ -29,12 +34,20 @@ Public Sub ExtractVars()
     ReDim KeyWordLen(0) As Long
     Dim ExceptFlag As Boolean
     
+    Dim Temp As Long
+    Dim TempStr(10) As String
+    Dim FilterStr As Variant
+    Dim UnqStr As String
+    
+    Dim IdxBeg As Long
+    
+    
     'File Dialog
     strFileToOpen = Application.GetOpenFilename _
     (Title:="Please choose a file to open", _
     FileFilter:="VBA Code Files *.bas (*.bas),")
     
-    'ì„ íƒëœ íŒŒì¼(ê²½ë¡œ í¬í•¨)ëª… ì „ë‹¬
+    '¼±ÅÃµÈ ÆÄÀÏ(°æ·Î Æ÷ÇÔ)¸í Àü´Ş
     If strFileToOpen <> "" And strFileToOpen <> False Then
         BASFileName = strFileToOpen
     Else
@@ -77,7 +90,7 @@ Public Sub ExtractVars()
         
         Line Input #fnr, RecData
         
-        'ëª…ë ¹ì–´ ë’·ë¶€ë¶„(ì˜¤ë¥¸ìª½)ì— ìœ„ì¹˜í•œ ì£¼ì„ ë‚´ìš©ì„ ì‚­ì œ ì²˜ë¦¬ - ë‹¨, í° ë”°ì˜´í‘œ ì‚¬ì´ì— ë“¤ì–´ê°€ëŠ” ì‘ì€ ë”°ì˜´í‘œì˜ ê²½ìš°, ì£¼ì„ì´ ì•„ë‹ˆê¸° ë•Œë¬¸ì— ì˜ˆì™¸ ì²˜ë¦¬
+        '¸í·É¾î µŞºÎºĞ(¿À¸¥ÂÊ)¿¡ À§Ä¡ÇÑ ÁÖ¼® ³»¿ëÀ» »èÁ¦ Ã³¸® - ´Ü, Å« µû¿ÈÇ¥ »çÀÌ¿¡ µé¾î°¡´Â ÀÛÀº µû¿ÈÇ¥ÀÇ °æ¿ì, ÁÖ¼®ÀÌ ¾Æ´Ï±â ¶§¹®¿¡ ¿¹¿Ü Ã³¸®
         If InStr(RecData, "'") > 0 Then
             If InStr(RecData, """") > 0 And InStr(RecData, "'") > InStr(RecData, """") Then
                 TRecData = RecData
@@ -92,41 +105,46 @@ Public Sub ExtractVars()
             End If
         End If
         
-        'ë¬¸ì¥ ë‚´ì—ì„œ í° ë”°ì˜´í‘œì— í•´ë‹¹í•˜ëŠ” ë¶€ë¶„ì„ ëª¨ë‘ ì‚­ì œ ì²˜ë¦¬
+        '¹®Àå ³»¿¡¼­ Å« µû¿ÈÇ¥¿¡ ÇØ´çÇÏ´Â ºÎºĞÀ» ¸ğµÎ »èÁ¦ Ã³¸®
         Do While InStr(RecData, """") > 0
             RecData = Left(RecData, InStr(RecData, """") - 1) & Right(RecData, Len(RecData) - InStr(InStr(RecData, """") + 1, RecData, """"))
         Loop
         
-        'tab ë¬¸ìê°€ ìˆëŠ” ê²½ìš° trim ì²˜ë¦¬ê°€ ì˜ë„í•œ ëŒ€ë¡œ ë˜ì§€ ì•Šê¸° ë•Œë¬¸ì— tab ë¬¸ìë¥¼ ëª¨ë‘ ì œê±°
+        'tab ¹®ÀÚ°¡ ÀÖ´Â °æ¿ì trim Ã³¸®°¡ ÀÇµµÇÑ ´ë·Î µÇÁö ¾Ê±â ¶§¹®¿¡ tab ¹®ÀÚ¸¦ ¸ğµÎ Á¦°Å
         RecData = Replace(RecData, vbTab, "")
         
-        'ë¬¸ì¥ì˜ ì–‘ ì˜†ì— ìˆëŠ” blank ë¥¼ ëª¨ë‘ ì œê±°
+        '¹®ÀåÀÇ ¾ç ¿·¿¡ ÀÖ´Â blank ¸¦ ¸ğµÎ Á¦°Å
         RecData = Trim(RecData)
         
-        'trim ì²˜ë¦¬ í›„ ë¬¸ì¥ ëì— underline ì´ ìˆëŠ” ê²½ìš°ì— ë‹¤ìŒ ì²˜ë¦¬ë¡œ ë„˜ê¹€
+        'trim Ã³¸® ÈÄ ¹®Àå ³¡¿¡ underline ÀÌ ÀÖ´Â °æ¿ì¿¡ ´ÙÀ½ Ã³¸®·Î ³Ñ±è
         If Right(RecData, 1) = "_" Then
             RecDataSaved = RecDataSaved & Left(RecData, Len(RecData) - 1)
         Else
             RecData = RecDataSaved & RecData
+            RecDataTot(LCount) = RecData
+            LCount = LCount + 1
+            ReDim Preserve RecDataTot(LCount)
 
             i = 2
             
             '======================================================================================================================================================
-            '* ë°°ì—´ íŒŒë¼ë¯¸í„° ì²´í¬ ì‹œì‘
+            '* ¹è¿­ ÆÄ¶ó¹ÌÅÍ Ã¼Å© ½ÃÀÛ
             '======================================================================================================================================================
-            'ì—´ë¦° ê´„í˜¸ ìˆì„ ë•Œë§Œ ìˆ˜í–‰
+            '¿­¸° °ıÈ£ ÀÖÀ» ¶§¸¸ ¼öÇà
             If InStr(RecData, "(") > 0 Then
                 
-                'ì§„í–‰ ë¬¸ì ìœ„ì¹˜ ì´í›„ì— ì—´ë¦° ê´„í˜¸ê°€ ìˆëŠ” ë™ì•ˆ ê³„ì† ìˆ˜í–‰
+                'ÁøÇà ¹®ÀÚ À§Ä¡ ÀÌÈÄ¿¡ ¿­¸° °ıÈ£°¡ ÀÖ´Â µ¿¾È °è¼Ó ¼öÇà
                 Do While InStr(i, RecData, "(") > 1
                     
-                    'ì—´ë¦° ê´„í˜¸ ì•ì˜ ë¬¸ìê°€ ê³µë°±ì´ ì•„ë‹Œ ê²½ìš°, ì¦‰, ë°°ì—´(í•˜ì§€ë§Œ í•¨ìˆ˜ë‚˜ í”„ë¡œì‹œì €ê°€ ë  ìˆ˜ë„ ìˆìŒ)ë¡œ íŒë‹¨ë˜ëŠ” ê²½ìš°ì— ìˆ˜í–‰
+                    '¿­¸° °ıÈ£ ¾ÕÀÇ ¹®ÀÚ°¡ °ø¹éÀÌ ¾Æ´Ñ °æ¿ì, Áï, ¹è¿­(ÇÏÁö¸¸ ÇÔ¼ö³ª ÇÁ·Î½ÃÀú°¡ µÉ ¼öµµ ÀÖÀ½)·Î ÆÇ´ÜµÇ´Â °æ¿ì¿¡ ¼öÇà
                     If Mid(RecData, i, 1) = "(" And Mid(RecData, i - 1, 1) <> " " Then
                         
+                        'ArrCount : ¹è¿­ÀÇ Â÷¿øÀ» Ä«¿îÆ®
+                        'Flag : 1 ÀÌ¸é ¹è¿­ÀÇ ÆÄ¶ó¹ÌÅÍ
                         ArrCount = 0
                         Flag = 1
                         
-                        'ì—´ë¦° ê´„í˜¸ ë‹¤ìŒ ìœ„ì¹˜ì—ì„œ ì²˜ìŒìœ¼ë¡œ ì½¤ë§ˆê°€ ë‚˜ì˜¤ëŠ” ìœ„ì¹˜ê¹Œì§€ ë°˜ë³µ
+                        '¿­¸° °ıÈ£ ´ÙÀ½ À§Ä¡¿¡¼­ Ã³À½À¸·Î ÄŞ¸¶°¡ ³ª¿À´Â À§Ä¡±îÁö ¹İº¹
                         j = i + 1
                         Do While Flag > 0
                             If Mid(RecData, j, 1) = "(" Then
@@ -136,12 +154,12 @@ Public Sub ExtractVars()
                             ElseIf Mid(RecData, j, 1) = "," And Flag = 1 Then
                                 ArrCount = ArrCount + 1
                             End If
+                            
                             j = j + 1
                         Loop
                         
-                        'MsgBox ArrCount + 1 & "ê°œì˜ ì¸ìë¥¼ ê°€ì§€ê³  ìˆìŠµë‹ˆë‹¤."
-                        RecData = Left(RecData, i - 1) & "_" & CStr(ArrCount + 1) & "ì°¨ì›ë°°ì—´ " & Right(RecData, Len(RecData) - i)
-                        
+                        'MsgBox ArrCount + 1 & "°³ÀÇ ÀÎÀÚ¸¦ °¡Áö°í ÀÖ½À´Ï´Ù."
+                        RecData = Left(RecData, i - 1) & "|" & CStr(ArrCount + 1) & "Â÷¿ø¹è¿­ " & Right(RecData, Len(RecData) - i)
                     End If
                     
                     i = i + 1
@@ -150,12 +168,12 @@ Public Sub ExtractVars()
                 
             End If
             '======================================================================================================================================================
-            '* ë°°ì—´ íŒŒë¼ë¯¸í„° ì²´í¬ ë
+            '* ¹è¿­ ÆÄ¶ó¹ÌÅÍ Ã¼Å© ³¡
             '======================================================================================================================================================
             
             TRecData = RecData
         
-            'ë¬¸ì¥ì˜ ë§¨ ì•ì— ì˜¬ ìˆ˜ ìˆëŠ” ëª…ë ¹ì–´ ê¸°ì¤€ìœ¼ë¡œ íŒŒì‹± ëŒ€ìƒ ì œì™¸
+            '¹®ÀåÀÇ ¸Ç ¾Õ¿¡ ¿Ã ¼ö ÀÖ´Â ¸í·É¾î ±âÁØÀ¸·Î ÆÄ½Ì ´ë»ó Á¦¿Ü
             If TRecData <> "" And _
             Left(TRecData, 1) <> "'" And _
             Left(TRecData, 9) <> "Attribute" And _
@@ -166,38 +184,38 @@ Public Sub ExtractVars()
                 
                 i = i + 1
                 
-                'ì½¤ë§ˆ ê¸°ì¤€ êµ¬ë¶„
+                'ÄŞ¸¶ ±âÁØ ±¸ºĞ
                 TRecData = Replace(TRecData, ", ", " ")
                 
-                'í•œ ì¤„ì— ë‘ ê°œ ì´ìƒ ëª…ë ¹ì–´ ì…ë ¥ëœ ê²ƒ êµ¬ë¶„
-                TRecData = Replace(TRecData, ":", "")
+                'ÇÑ ÁÙ¿¡ µÎ °³ ÀÌ»ó ¸í·É¾î ÀÔ·ÂµÈ °Í ±¸ºĞ
+                TRecData = Replace(TRecData, ":", " ")
                 
-                'í° ë”°ì˜´í‘œ ê³µë°±ìœ¼ë¡œ ì¹˜í™˜ -> í° ë”°ì˜´í‘œ ë‚´ì˜ ë‚´ìš©ì€ ëª¨ë‘ ì‚­ì œ ì²˜ë¦¬ í•„ìš”
+                'Å« µû¿ÈÇ¥ °ø¹éÀ¸·Î Ä¡È¯ -> Å« µû¿ÈÇ¥ ³»ÀÇ ³»¿ëÀº ¸ğµÎ »èÁ¦ Ã³¸® ÇÊ¿ä
                 'TRecData = Replace(TRecData, """", "")
                 
-                'ì—´ë¦° ê´„í˜¸ ì•ì— ê³µë°±ì´ ìˆëŠ” ê²½ìš°ëŠ” ë°°ì—´ ê´„í˜¸ê°€ ì•„ë‹ˆë¼ì„œ ê³µë°±ìœ¼ë¡œ ì¹˜í™˜
+                '¿­¸° °ıÈ£ ¾Õ¿¡ °ø¹éÀÌ ÀÖ´Â °æ¿ì´Â ¹è¿­ °ıÈ£°¡ ¾Æ´Ï¶ó¼­ °ø¹éÀ¸·Î Ä¡È¯
                 TRecData = Replace(TRecData, " (", " ")
                 
-                'ë‹«íŒ ê´„í˜¸ëŠ” ì‚­ì œ
+                '´İÈù °ıÈ£´Â »èÁ¦
                 TRecData = Replace(TRecData, ")", "")
                 
-                'ë‚¨ì€ ì—´ë¦° ê´„í˜¸ëŠ” ë°°ì—´ ê´„í˜¸ë¡œ ê°„ì£¼í•˜ì—¬ ê³µë°±ìœ¼ë¡œ ì¹˜í™˜ - ì´ë ‡ê²Œ ì²˜ë¦¬í•˜ë©´ ë°°ì—´ ì°¨ì› êµ¬ë¶„ ë¶ˆê°€
+                '³²Àº ¿­¸° °ıÈ£´Â ¹è¿­ °ıÈ£·Î °£ÁÖÇÏ¿© °ø¹éÀ¸·Î Ä¡È¯ - ÀÌ·¸°Ô Ã³¸®ÇÏ¸é ¹è¿­ Â÷¿ø ±¸ºĞ ºÒ°¡
                 'TRecData = Replace(TRecData, "(", "[Array] ")
                 
-                'ë°°ì—´ ì„ ì–¸ì—ì„œ ì‚¬ìš©ë˜ëŠ” "To" ë¶€ë¶„ì„ ê³µë°±ìœ¼ë¡œ ì¹˜í™˜
+                '¹è¿­ ¼±¾ğ¿¡¼­ »ç¿ëµÇ´Â "To" ºÎºĞÀ» °ø¹éÀ¸·Î Ä¡È¯
                 TRecData = Replace(TRecData, " To ", " ")
                 
                 'TRecData = Replace(TRecData, " ", "")
                 
-                'ê³µë°±ì´ ë‘ ê°œ ì´ìƒ ì¡´ì¬í•˜ëŠ” ê²½ìš° í•˜ë‚˜ë¡œ ì¹˜í™˜
+                '°ø¹éÀÌ µÎ °³ ÀÌ»ó Á¸ÀçÇÏ´Â °æ¿ì ÇÏ³ª·Î Ä¡È¯
                 Do While InStr(TRecData, "  ") > 0
                     TRecData = Replace(TRecData, "  ", " ")
                 Loop
                 
-                'ë‹¤ì‹œ í•œë²ˆ ì–‘ìª½ ë ê³µë°± ì œê±°
+                '´Ù½Ã ÇÑ¹ø ¾çÂÊ ³¡ °ø¹é Á¦°Å
                 TRecData = Trim(TRecData)
                 
-                'ê³µë°± ê¸°ì¤€ìœ¼ë¡œ ë¬¸ìì—´ ë¶„í•´
+                '°ø¹é ±âÁØÀ¸·Î ¹®ÀÚ¿­ ºĞÇØ
                 SRecData = Split(TRecData, " ")
                 
                 j = 0
@@ -235,14 +253,112 @@ Public Sub ExtractVars()
     
     Close #fnr
     
+    'ÃßÃâµÈ ÀüÃ¼ º¯¼ö ¸®½ºÆ® Ãâ·Â
     For i = 1 To UBound(VarArray)
         Worksheets("Temp2").Cells(i, 1) = VarArray(i - 1)
     Next i
     
+    'Áßº¹º¯¼ö Á¦°Å
     UArray = ArrayUnique(VarArray)
     
+    'Áßº¹ Á¦°ÅµÈ º¯¼ö ¸®½ºÆ® Ãâ·Â
     For i = 1 To UBound(UArray)
-        Worksheets("Temp2").Cells(i, 2) = UArray(i - 1)
+        If InStr(UArray(i - 1), "|") > 0 Then
+            Worksheets("Temp2").Cells(i, 2) = Left(UArray(i - 1), InStr(UArray(i - 1), "|") - 1)
+        Else
+            Worksheets("Temp2").Cells(i, 2) = UArray(i - 1)
+        End If
+    Next i
+    
+    'º¯¼ö¸®½ºÆ® Áß ¹è¿­¿¡ ´ëÇØ¼­ ¹è¿­ ÀÎµ¦½º ÃßÃâ
+    For i = 1 To UBound(UArray)
+        
+        '¹è¿­ º¯¼öÀÇ ÀÌ¸§ ³¡ À§Ä¡ ÀúÀå
+        Temp = InStr(UArray(i - 1), "|") - 1
+        Erase TempStr
+        
+        '¹è¿­ º¯¼ö¿¡ ´ëÇØ¼­¸¸ ÀÛµ¿
+        If Temp > 0 Then
+            
+            'Source code ÀÇ ³»¿ëÀ» Ã³À½ºÎÅÍ ³¡±îÁö ÇÑ ÁÙ¾¿ °ËÅä
+            For j = 1 To UBound(RecDataTot)
+                
+                k = 1
+                    
+                '======================================================================================================================================================
+                '* ¹è¿­ ÆÄ¶ó¹ÌÅÍ Ã¼Å© ½ÃÀÛ
+                '======================================================================================================================================================
+                    
+                'ÁøÇà ¹®ÀÚ À§Ä¡ ÀÌÈÄ¿¡ ¹è¿­ º¯¼ö°¡ ÀÖ´Â µ¿¾È °è¼Ó ¼öÇà
+                Do While InStr(k, RecDataTot(j - 1), Left(UArray(i - 1), Temp)) > 0
+                    
+                    IdxBeg = InStr(k, RecDataTot(j - 1), Left(UArray(i - 1), Temp)) + Len(Left(UArray(i - 1), Temp))
+                    k = IdxBeg
+                    Debug.Print i, j, Left(UArray(i - 1), Temp), InStr(RecDataTot(j - 1), Left(UArray(i - 1), Temp)) + Len(Left(UArray(i - 1), Temp))
+                    
+                    '¿­¸° °ıÈ£ ¾ÕÀÇ ¹®ÀÚ°¡ °ø¹éÀÌ ¾Æ´Ñ °æ¿ì, Áï, ¹è¿­(ÇÏÁö¸¸ ÇÔ¼ö³ª ÇÁ·Î½ÃÀú°¡ µÉ ¼öµµ ÀÖÀ½)·Î ÆÇ´ÜµÇ´Â °æ¿ì¿¡ ¼öÇà
+                    If Mid(RecDataTot(j - 1), k, 1) = "(" And Mid(RecDataTot(j - 1), k - 1, 1) <> " " Then
+                        
+                        'ArrCount : ¹è¿­ÀÇ Â÷¿øÀ» Ä«¿îÆ®
+                        'Flag : 1 ÀÌ¸é ¹è¿­ÀÇ ÆÄ¶ó¹ÌÅÍ
+                        ArrCount = 0
+                        Flag = 1
+                        
+                        '¿­¸° °ıÈ£ ´ÙÀ½ À§Ä¡¿¡¼­ Ã³À½À¸·Î ÄŞ¸¶°¡ ³ª¿À´Â À§Ä¡±îÁö ¹İº¹
+                        l = k + 1
+                        Do While Flag > 0
+                            If Mid(RecDataTot(j - 1), l, 1) = "(" Then
+                                Flag = Flag + 1
+                            ElseIf Mid(RecDataTot(j - 1), l, 1) = ")" Then
+                                Flag = Flag - 1
+                                TempStr(ArrCount) = TempStr(ArrCount) & ","
+                            ElseIf Mid(RecDataTot(j - 1), l, 1) = "," And Flag = 1 Then
+                                TempStr(ArrCount) = TempStr(ArrCount) & ","
+                                ArrCount = ArrCount + 1
+                            End If
+                            
+                            If Flag = 1 And _
+                               Mid(RecDataTot(j - 1), l, 1) <> ")" And _
+                               Mid(RecDataTot(j - 1), l, 1) <> "," Then
+                                TempStr(ArrCount) = TempStr(ArrCount) & Mid(RecDataTot(j - 1), l, 1)
+                            End If
+                            l = l + 1
+                        Loop
+                        
+                        'Array ¿¡¼­ »ç¿ëµÈ index ¸¦ µ¥ÀÌÅÍ À¯È¿¼º °Ë»çÀÇ ¸ñ·Ï ±â´ÉÀ» ÀÌ¿ëÇØ¼­ Ãâ·Â
+                        'Áßº¹µÈ Ç×¸ñÀº Á¦°ÅÇÔ
+                        For l = 0 To ArrCount
+                            'Worksheets("Temp2").Cells(i, 3 + l) = TempStr(l)
+                            'TempStr(ArrCount) = Trim(Replace(TempStr(ArrCount), ", ", ","))
+                            FilterStr = ArrayUnique(Split(TempStr(l), ","))
+                            
+                            For m = 1 To UBound(FilterStr)
+                                If m = 1 Then
+                                    UnqStr = Trim(FilterStr(m - 1))
+                                Else
+                                    UnqStr = UnqStr & "," & Trim(FilterStr(m - 1))
+                                End If
+                            Next m
+                            'Debug.Print UnqStr
+                            Worksheets("Temp2").Cells(i, 3 + l).Select
+                            Call DataValidate(UnqStr)
+                            Worksheets("Temp2").Cells(i, 3 + l) = Trim(FilterStr(0))
+                        Next l
+                    End If
+                    
+                    k = k + 1
+                    
+                Loop
+                    
+                '======================================================================================================================================================
+                '* ¹è¿­ ÆÄ¶ó¹ÌÅÍ Ã¼Å© ³¡
+                '======================================================================================================================================================
+                    
+            Next j
+            
+        End If
+        
     Next i
     
 End Sub
+
